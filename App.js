@@ -1,8 +1,16 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Platform, Text, View, SafeAreaView, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import {
+  StyleSheet,
+  Platform,
+  Text,
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+} from "react-native";
+import { useEffect, useState } from "react";
 import Header from "./src/components/Header";
 import Timer from "./src/components/Timer";
+import { Audio } from "expo-av";
 
 const colors = ["#F7DC6F", "#A2D9CE", "#D7BDE2"];
 
@@ -12,8 +20,40 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState("POMO" | "SHORTB" | "BREAK"); // Estados con los que cuenta la app (25min | 5min | 15min).. toma el valor "POMO" por default
   const [isActive, setIsActive] = useState(false);
 
-  function handleStartStop(){
-    setIsActive(!isActive)
+  useEffect(() => {
+    let interval = null;
+
+    if (isActive) {
+      // run timer
+      interval = setInterval(() => {
+        setTime(time - 1);
+      }, 1000);
+    } else {
+      //Clear interval
+      clearInterval(interval);
+    }
+
+    if(time === 0){
+      setIsActive(false);
+      setIsWorking((prev) => !prev);
+      setTime(isWorking ? 300 : 1500)
+    }
+
+    return () => clearInterval(interval);
+
+  }, [isActive, time]);
+
+  function handleStartStop() {
+    playSound();
+    setIsActive(!isActive);
+  }
+
+  async function playSound() {
+    const { sound } = await Audio.Sound.createAsync(
+      require("./assets/sounds/click.wav")
+    );
+
+    await sound.playAsync();
   }
 
   return (
@@ -22,7 +62,7 @@ export default function App() {
     >
       <View
         style={{
-          flex:1,
+          flex: 1,
           paddingHorizontal: 15,
           paddingTop: Platform.OS === "android" && 21,
           paddingLeft: 9,
@@ -36,7 +76,9 @@ export default function App() {
         />
         <Timer time={time} />
         <TouchableOpacity onPress={handleStartStop} style={styles.button}>
-          <Text style={{color: "white", fontWeight: "bold"}} > {isActive ? "STOP" : "START"}</Text>
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            {isActive ? "STOP" : "START"}
+          </Text>
         </TouchableOpacity>
         <StatusBar style="auto" />
       </View>
@@ -49,11 +91,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   text: { fontSize: 32, fontWeight: "bold" },
-  button:{
+  button: {
     alignItems: "center",
     backgroundColor: "#333333",
     padding: 15,
     marginTop: 15,
     borderRadius: 15,
-  }
+  },
 });

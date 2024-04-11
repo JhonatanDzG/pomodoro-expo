@@ -1,11 +1,14 @@
 import { View, Text, StyleSheet } from "react-native";
 
 export default function Timer({ time }) {
+
+  // Formats the time to be displayed in the format of mm:ss
   const formattedTime = `${Math.floor(time / 60)
     .toString()
     .padStart(2, "0")}:${(time % 60).toString().padStart(2, "0")} `;
 
   return (
+    
     <View style={styles.container}>
       <Text style={styles.time}>{formattedTime}</Text>
     </View>
